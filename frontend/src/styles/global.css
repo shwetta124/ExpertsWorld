@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Brand */
+  --brand: #1A56DB;
+  --brand-dark: #1447C0;
+  --brand-deeper: #0F3A9E;
+  --brand-light: #EBF2FF;
+  --brand-mid: #3B82F6;
+
+  /* Accent */
+  --accent: #F59E0B;
+  --accent-light: #FEF3C7;
+  --accent-dark: #D97706;
+
+  /* Semantic */
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --success-dark: #059669;
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+  --warning: #F59E0B;
+
+  /* Surface */
+  --bg: #F8FAFF;
+  --bg2: #EFF4FF;
+  --surface: #FFFFFF;
+  --surface2: #F1F5FD;
+  --surface3: #E8EFFE;
+
+  /* Text */
+  --text: #0F172A;
+  --text2: #475569;
+  --text3: #94A3B8;
+  --text4: #CBD5E1;
+
+  /* Border */
+  --border: #E2E8F0;
+  --border2: #CBD5E1;
+  --border3: #B8C8E8;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+  --r-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(15,23,42,0.06);
+  --shadow: 0 2px 12px rgba(26,86,219,0.08);
+  --shadow-md: 0 4px 20px rgba(15,23,42,0.08);
+  --shadow-lg: 0 8px 40px rgba(26,86,219,0.14);
+  --shadow-brand: 0 4px 24px rgba(26,86,219,0.25);
+
+  /* Typography */
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  /* Nav height */
+  --nav-h: 64px;
+
+  /* Sidebar */
+  --sidebar-w: 240px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0B1120;
+    --bg2: #0F1729;
+    --surface: #141E33;
+    --surface2: #1A2744;
+    --surface3: #1E2E50;
+    --text: #F0F6FF;
+    --text2: #94A3B8;
+    --text3: #4A6080;
+    --text4: #2D3E5A;
+    --border: #1E2D4A;
+    --border2: #253550;
+    --border3: #2D4070;
+    --brand-light: #0F1F40;
+    --accent-light: #2A1E06;
+    --success-light: #062A1E;
+    --danger-light: #2A0A0A;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input, textarea, select {
+  font-family: var(--font-body);
+  outline: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* Utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+/* ── ADD THIS TO BOTTOM OF global.css ───────────────────────
+   Dark mode via data-theme attribute (controlled by ThemeContext)
+   This overrides the prefers-color-scheme media query
+   so user toggle works correctly
+─────────────────────────────────────────────────────────── */
+
+[data-theme="dark"] {
+  --bg:          #0B1120;
+  --bg2:         #0F1729;
+  --surface:     #141E33;
+  --surface2:    #1A2744;
+  --surface3:    #1E2E50;
+  --text:        #F0F6FF;
+  --text2:       #94A3B8;
+  --text3:       #4A6080;
+  --text4:       #2D3E5A;
+  --border:      #1E2D4A;
+  --border2:     #253550;
+  --border3:     #2D4070;
+  --brand-light: #0F1F40;
+  --accent-light:#2A1E06;
+  --success-light:#062A1E;
+  --danger-light: #2A0A0A;
+}
+
+[data-theme="light"] {
+  --bg:          #F8FAFF;
+  --bg2:         #EFF4FF;
+  --surface:     #FFFFFF;
+  --surface2:    #F1F5FD;
+  --surface3:    #E8EFFE;
+  --text:        #0F172A;
+  --text2:       #475569;
+  --text3:       #94A3B8;
+  --text4:       #CBD5E1;
+  --border:      #E2E8F0;
+  --border2:     #CBD5E1;
+  --border3:     #B8C8E8;
+  --brand-light: #EBF2FF;
+  --accent-light:#FEF3C7;
+  --success-light:#D1FAE5;
+  --danger-light: #FEE2E2;
+}
+
+/* Smooth transition when switching themes */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.1s ease;
+}
