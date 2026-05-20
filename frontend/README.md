@@ -15,14 +15,11 @@
 ## 🌐 Live Demo
 
 | | Link |
-|--|------|
-| 🖥️ Frontend | https://expertsworld.vercel.app |
-| ⚙️ Backend API | https://expertsworld.onrender.com |
-| 📡 Health Check | https://expertsworld.onrender.com/api/health |
+
+|
 | 💻 GitHub | https://github.com/shwetta124/ExpertsWorld |
 
-> ⚠️ Replace links with your actual deployment URLs after deploying.
-
+>
 ---
 
 ## 📌 Table of Contents
