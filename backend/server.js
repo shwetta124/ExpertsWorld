@@ -1,8 +1,4 @@
-// ============================================================
-//  ExpertsWorld — Main Server
-// ============================================================
-
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// 📁 FILE: backend/server.js
 require('dotenv').config();
 
 const express      = require('express');
@@ -23,7 +19,7 @@ let Message;
 try {
   Message = require('./models/Message');
 } catch (err) {
-  console.warn('⚠️  Message model not found — chat saving disabled');
+  console.warn('⚠️  Message model not found');
 }
 
 const app        = express();
@@ -37,10 +33,23 @@ const expertSockets = new Map();
 connectDB();
 
 // ── Middleware ────────────────────────────────────────────────
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
 app.use(cors({
-  origin:      process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // allow all in development
+    }
+  },
   credentials: true,
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -52,10 +61,9 @@ app.use('/api',         sessionRoutes);
 // ── Health check ──────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
-    status:         'ok',
-    env:            process.env.NODE_ENV,
-    connectedUsers: userSockets.size,
-    timestamp:      new Date().toISOString(),
+    status:    'ok',
+    env:       process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -66,23 +74,18 @@ app.get('/api/agora/token', protect, (req, res) => {
     const appId   = process.env.AGORA_APP_ID;
     const appCert = process.env.AGORA_APP_CERTIFICATE;
 
-    // No certificate means testing mode — return null token
     if (!appCert || appCert === 'none' || appCert === '') {
       return res.json({ success: true, token: null, appId });
     }
 
-    // Certificate exists — generate real token
     try {
       const { RtcTokenBuilder, RtcRole } = require('agora-token');
-      const uid    = 0;
-      const expire = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+      const expire = Math.floor(Date.now() / 1000) + 3600;
       const token  = RtcTokenBuilder.buildTokenWithUid(
-        appId, appCert, channel, uid, RtcRole.PUBLISHER, expire, expire
+        appId, appCert, channel, 0, RtcRole.PUBLISHER, expire, expire
       );
-      console.log(`🎥 Agora token generated for channel: ${channel}`);
       return res.json({ success: true, token, appId, channel });
-    } catch (tokenErr) {
-      console.warn('agora-token not installed — returning null token');
+    } catch {
       return res.json({ success: true, token: null, appId });
     }
   } catch (err) {
@@ -95,8 +98,9 @@ app.get('/api/agora/token', protect, (req, res) => {
 // ══════════════════════════════════════════════════════════════
 const io = new Server(httpServer, {
   cors: {
-    origin:  process.env.CLIENT_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    origin:      allowedOrigins,
+    methods:     ['GET', 'POST'],
+    credentials: true,
   },
   pingTimeout:  60000,
   pingInterval: 25000,
@@ -107,7 +111,6 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log(`🔌 Socket connected: ${socket.id}`);
 
-  // ── User joins room ────────────────────────────────────────
   socket.on('join_user', (userId) => {
     if (!userId) return;
     socket.join(`user_${userId}`);
@@ -115,45 +118,35 @@ io.on('connection', (socket) => {
     console.log(`👤 User ${userId} joined`);
   });
 
-  // ── Expert joins room ──────────────────────────────────────
   socket.on('join_expert', (expertId) => {
     if (!expertId) return;
     socket.join(`expert_${expertId}`);
     expertSockets.set(String(expertId), socket.id);
     io.emit('expert_online', { expertId, online: true });
-    console.log(`🧑‍💼 Expert ${expertId} joined`);
   });
 
-  // ── Expert sets availability ───────────────────────────────
   socket.on('set_availability', ({ expertId, online }) => {
     io.emit('expert_online', { expertId, online });
   });
 
-  // ── Expert responds to request ─────────────────────────────
   socket.on('respond_request', ({ sessionId, userId, action, expertName }) => {
     io.to(`user_${userId}`).emit('request_response', {
-      sessionId,
-      action,
-      expertName,
+      sessionId, action, expertName,
       message: action === 'accepted'
         ? `${expertName} accepted your request!`
         : `${expertName} is unavailable right now.`,
     });
   });
 
-  // ── Join session chat room ─────────────────────────────────
   socket.on('join_session', (sessionId) => {
     if (!sessionId) return;
     socket.join(`session_${sessionId}`);
-    console.log(`💬 Socket joined session: ${sessionId}`);
   });
 
-  // ── Send chat message ──────────────────────────────────────
   socket.on('send_message', async (data) => {
     const { sessionId, senderId, senderName, text, type, fileName, timestamp } = data;
     if (!sessionId || !text) return;
 
-    // Save to MongoDB
     if (Message && senderId) {
       try {
         await Message.create({
@@ -165,27 +158,22 @@ io.on('connection', (socket) => {
           fileName:   fileName || '',
         });
       } catch (err) {
-        console.error('❌ Message save failed:', err.message);
+        console.error('Message save failed:', err.message);
       }
     }
 
-    // Broadcast to all OTHER users in session
     socket.to(`session_${sessionId}`).emit('receive_message', {
-      senderId,
-      senderName,
-      text,
+      senderId, senderName, text,
       type:      type || 'text',
       fileName:  fileName || '',
       timestamp: timestamp || new Date().toISOString(),
     });
   });
 
-  // ── Typing indicator ───────────────────────────────────────
   socket.on('user_typing', ({ sessionId, senderId, isTyping }) => {
     socket.to(`session_${sessionId}`).emit('user_typing', { senderId, isTyping });
   });
 
-  // ── Disconnect ─────────────────────────────────────────────
   socket.on('disconnect', () => {
     for (const [uid, sid] of userSockets.entries()) {
       if (sid === socket.id) { userSockets.delete(uid); break; }
@@ -197,11 +185,11 @@ io.on('connection', (socket) => {
         break;
       }
     }
-    console.log(`🔌 Socket disconnected: ${socket.id}`);
+    console.log(`🔌 Disconnected: ${socket.id}`);
   });
 });
 
-// ── Error handler (must be last) ──────────────────────────────
+// ── Error handler ─────────────────────────────────────────────
 app.use(errorHandler);
 
 // ── Start server ──────────────────────────────────────────────

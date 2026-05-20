@@ -2,13 +2,16 @@
 
 import axios from 'axios';
 
-// ── Base URL ───────────────────────────────────────────────────
+// ── Base URL — works for both local and production ─────────────
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
+  baseURL:         BASE_URL,
   withCredentials: true,
+  timeout:         30000,
 });
 
-// ── Request interceptor — attach JWT token ─────────────────────
+// ── Attach JWT token to every request ─────────────────────────
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('ew_token');
@@ -18,7 +21,7 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Response interceptor — handle 401 ────────────────────────
+// ── Handle 401 — redirect to login ────────────────────────────
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -35,16 +38,16 @@ API.interceptors.response.use(
 //  AUTH API
 // ══════════════════════════════════════════════════════════════
 export const authAPI = {
-  register:      (data)  => API.post('/auth/register', data),
-  login:         (data)  => API.post('/auth/login', data),
-  googleLogin:   (data)  => API.post('/auth/google', data),
-  getMe:         ()      => API.get('/auth/me'),
-  updateProfile: (data)  => API.put('/auth/update-profile', data),
-  changePassword:(data)  => API.put('/auth/change-password', data),
-  forgotPassword:(data)  => API.post('/auth/forgot-password', data),
-  verifyOTP:     (data)  => API.post('/auth/verify-otp', data),
-  resetPassword: (data)  => API.post('/auth/reset-password', data),
-  saveFcmToken:  (data)  => API.post('/auth/save-fcm-token', data),
+  register:       (data) => API.post('/auth/register', data),
+  login:          (data) => API.post('/auth/login', data),
+  googleLogin:    (data) => API.post('/auth/google', data),
+  getMe:          ()     => API.get('/auth/me'),
+  updateProfile:  (data) => API.put('/auth/update-profile', data),
+  changePassword: (data) => API.put('/auth/change-password', data),
+  forgotPassword: (data) => API.post('/auth/forgot-password', data),
+  verifyOTP:      (data) => API.post('/auth/verify-otp', data),
+  resetPassword:  (data) => API.post('/auth/reset-password', data),
+  saveFcmToken:   (data) => API.post('/auth/save-fcm-token', data),
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -63,17 +66,14 @@ export const expertAPI = {
 //  SESSION & PAYMENT API
 // ══════════════════════════════════════════════════════════════
 export const sessionAPI = {
-  // Payments
-  createOrder:  (expertId) => API.post('/payments/create-order', { expertId }),
-  verifyPayment:(data)     => API.post('/payments/verify', data),
-
-  // Sessions
-  getMySessions:     ()          => API.get('/sessions/my'),
-  getExpertRequests: ()          => API.get('/sessions/expert-requests'),
-  respond:           (id, action)=> API.patch(`/sessions/${id}/respond`, { action }),
-  complete:          (id, data)  => API.patch(`/sessions/${id}/complete`, data || {}),
-  rate:              (id, data)  => API.post(`/sessions/${id}/rate`, data),
-  getMessages:       (id)        => API.get(`/sessions/${id}/messages`),
+  createOrder:       (expertId) => API.post('/payments/create-order', { expertId }),
+  verifyPayment:     (data)     => API.post('/payments/verify', data),
+  getMySessions:     ()         => API.get('/sessions/my'),
+  getExpertRequests: ()         => API.get('/sessions/expert-requests'),
+  respond:           (id, action) => API.patch(`/sessions/${id}/respond`, { action }),
+  complete:          (id, data)   => API.patch(`/sessions/${id}/complete`, data || {}),
+  rate:              (id, data)   => API.post(`/sessions/${id}/rate`, data),
+  getMessages:       (id)         => API.get(`/sessions/${id}/messages`),
 };
 
 // ══════════════════════════════════════════════════════════════
